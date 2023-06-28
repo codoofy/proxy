@@ -3,7 +3,7 @@ import math,random
 from lxml import etree
 import os,time,json
 
-class Proxy:
+class Proxy():
     
     def __init__(self) -> None:
         headers = {
@@ -15,16 +15,16 @@ class Proxy:
         self.proxies = []
 
 
-    def get_content(self):
+    def get_content(self) -> None:
         for url in self.urls:
             res = requests.get(url=url,headers=self.headers,timeout=3)
             # print(requests.utils.get_encodings_from_content(res.text))
             content = res.content.decode(requests.utils.get_encodings_from_content(res.text)[0])
             self.parse(content)
-        with open('./proxies.json','w+',encoding='utf-8') as f:
-            f.write(json.dumps(self.proxies,ensure_ascii=False))
+        with open('./proxies.json','w+') as f:
+            json.dump({'proxy':self.proxies},fp=f,ensure_ascii=False,indent=4)
 
-    def parse(self,content):
+    def parse(self,content) -> None:
         html = etree.HTML(content)
         result = html.xpath("//div[@align='center']/table/tr")[1:]
         for re in result:
@@ -32,7 +32,7 @@ class Proxy:
             proxy_port = re.xpath("./td/text()")[1]
             proxy_address = re.xpath("./td/text()")[2]
             # proxy_style = re.xpath("./td/text()")[3]
-            proxy_check_time = re.xpath("./td/text()")[4]
+            proxy_check_time = re.xpath("./td/text()")[4].split(' ')[0]
             # 将获取的代理存放至列表中
             self.proxies.append({
                 'ip':proxy_ip,
@@ -40,9 +40,11 @@ class Proxy:
                 'address':proxy_address,
                 'check_time':proxy_check_time})
 
-    def random(self):
+    def random(self) -> dict:
         self.get_content()
         rd = math.floor(random.random()*len(self.proxies))
+        # print(rd)
+        # print(self.proxies[rd])
         proxies = {
             'http': 'http://'+self.proxies[rd]['ip']+':'+self.proxies[rd]['port']
             # 'https': 'https://'+self.proxies[rd]['ip']+':'+self.proxies[rd]['port']
@@ -57,7 +59,8 @@ def get_proxies():
     proxies={}
     if os.path.exists('./proxies.json') and math.ceil(time.time())-os.stat('./proxies.json').st_mtime<=12*60*60:
         with open('./proxies.json','r+') as f:
-            proxy_list = json.loads(f.readlines()[0])
+            contents = f.readlines()
+            proxy_list = json.loads(''.join(contents))['proxy']
             rd = math.floor(random.random()*len(proxy_list))
             proxies = {
                 'http': 'http://'+proxy_list[rd]['ip']+':'+proxy_list[rd]['port'],
@@ -75,5 +78,3 @@ res = requests.get(url='https://www.baidu.com',headers={
 print(proxies)
 
 print(res)
-
-

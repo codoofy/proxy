@@ -22,7 +22,7 @@ class Proxy:
             content = res.content.decode(requests.utils.get_encodings_from_content(res.text)[0])
             self.parse(content)
         with open('./proxies.json','w+',encoding='utf-8') as f:
-            f.write(json.dumps(self.proxies))
+            f.write(json.dumps(self.proxies,ensure_ascii=False))
 
     def parse(self,content):
         html = etree.HTML(content)
